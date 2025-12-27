@@ -79,16 +79,21 @@ if [[ "$choice" == "3" ]]; then
   fi
 
   # ---------- Ask before closing old ports ----------
-  echo
-  read -rp "Do you want to CLOSE old SSH port(s): $CUR_PORT ? (y/N): " close_ans
-  if [[ "$close_ans" == "y" ]]; then
-      for p in $CUR_PORT; do
-          sudo iptables -I INPUT -p tcp --dport "$p" -j DROP
-      done
-      echo "Old SSH port(s) closed."
-  else
-      echo "Old SSH port(s) left open."
-  fi
+echo
+read -rp "Do you want to CLOSE old SSH port(s): $CUR_PORT ? (y/N): " close_ans
+if [[ "$close_ans" == "y" ]]; then
+    for p in $CUR_PORT; do
+        if [[ "$p" != "$NEWPORT" ]]; then
+            sudo iptables -I INPUT -p tcp --dport "$p" -j DROP
+            echo "Closed old port $p"
+        else
+            echo "Skipping $p (same as new port)"
+        fi
+    done
+    echo "Old SSH port(s) processed."
+else
+    echo "Old SSH port(s) left open."
+fi
 
   sudo netfilter-persistent save
 
