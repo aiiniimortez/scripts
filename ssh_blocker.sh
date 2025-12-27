@@ -11,21 +11,24 @@ echo "== SSH Security Toolkit =="
 # -------------------------
 echo "[+] Checking prerequisites..."
 
-if ! command -v python3 >/dev/null 2>&1; then
-  sudo apt update
-  sudo apt install -y python3
+need_install=()
+
+command -v python3 >/dev/null 2>&1 || need_install+=(python3)
+command -v pip3   >/dev/null 2>&1 || need_install+=(python3-pip)
+dpkg -s iptables-persistent >/dev/null 2>&1 || need_install+=(iptables-persistent)
+dpkg -s python3-requests >/dev/null 2>&1 || need_install+=(python3-requests)
+dpkg -s python3-tqdm     >/dev/null 2>&1 || need_install+=(python3-tqdm)
+dpkg -s python3-geoip2   >/dev/null 2>&1 || need_install+=(python3-geoip2)
+
+if [ ${#need_install[@]} -ne 0 ]; then
+    echo "[+] Installing missing packages: ${need_install[*]}"
+    sudo apt update
+    sudo apt install -y "${need_install[@]}"
+else
+    echo "[✓] All prerequisites already installed."
 fi
 
-if ! dpkg -s iptables-persistent >/dev/null 2>&1; then
-  sudo apt update
-  sudo apt install -y iptables-persistent
-fi
-
-if ! command -v pip3 >/dev/null 2>&1; then
-  echo "[+] Installing python3-pip..."
-  sudo apt update
-  sudo apt install -y python3-pip
-fi
+clear
 
 # -------------------------
 # Menu
