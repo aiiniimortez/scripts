@@ -58,15 +58,15 @@ if [[ "$choice" == "3" ]]; then
 
 
   echo "[+] Writing new SSH port override..."
-SSHD_MAIN="/etc/ssh/sshd_config"
-
-sudo cp "$SSHD_MAIN" "${SSHD_MAIN}.bak.$(date +%F_%T)"
-
-if grep -q "^#\?Port" "$SSHD_MAIN"; then
-    sudo sed -i "s/^#\?Port.*/Port $NEWPORT/" "$SSHD_MAIN"
-else
-    echo "Port $NEWPORT" | sudo tee -a "$SSHD_MAIN"
-fi
+    SSHD_MAIN="/etc/ssh/sshd_config"
+    
+    sudo cp "$SSHD_MAIN" "${SSHD_MAIN}.bak.$(date +%F_%T)"
+    
+    if grep -q "^#\?Port" "$SSHD_MAIN"; then
+        sudo sed -i "s/^#\?Port.*/Port $NEWPORT/" "$SSHD_MAIN"
+    else
+        echo "Port $NEWPORT" | sudo tee -a "$SSHD_MAIN"
+    fi
 
   echo "[+] Opening firewall for new port..."
   sudo iptables -I INPUT -p tcp --dport "$NEWPORT" -j ACCEPT
