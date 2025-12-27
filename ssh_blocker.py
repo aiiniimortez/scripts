@@ -27,7 +27,7 @@ import geoip2.database
 # ------------------ Config ------------------
 GEOLITE_COUNTRY_PATH = "GeoLite2-Country.mmdb"
 GEOLITE_ASN_PATH = "GeoLite2-ASN.mmdb"
-MERGE_DB_URL = "https://raw.githubusercontent.com/aiiniimortez/scripts/refs/heads/main/merge_ips.db"
+MERGE_DB_URL = "https://raw.githubusercontent.com/aiiniimortez/scripts/refs/heads/main/merge_ips.sqlite"
 ENV_DIR = "/usr/local/ssh_blocker"
 ENV_FILE = os.path.join(ENV_DIR, "env")
 SERVER_ID_PATH = "/etc/ssh_blocker.id"  # primary location, fallback to ~/.ssh_blocker_id
