@@ -81,7 +81,10 @@ if [[ "$choice" == "3" ]]; then
   fi
 
   echo "[+] Restarting SSH..."
+  sudo systemctl daemon-reload
+  sudo systemctl restart ssh.socket
   sudo systemctl restart ssh
+sleep 2
   sleep 2
 
   if ! ss -tnlp | grep sshd | grep -q ":$NEWPORT"; then
