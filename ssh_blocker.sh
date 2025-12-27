@@ -21,6 +21,12 @@ if ! dpkg -s iptables-persistent >/dev/null 2>&1; then
   sudo apt install -y iptables-persistent
 fi
 
+if ! command -v pip3 >/dev/null 2>&1; then
+  echo "[+] Installing python3-pip..."
+  sudo apt update
+  sudo apt install -y python3-pip
+fi
+
 # -------------------------
 # Menu
 # -------------------------
