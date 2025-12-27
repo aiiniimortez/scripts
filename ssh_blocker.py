@@ -3,15 +3,9 @@ import os, subprocess, sys, re, ipaddress
 from collections import Counter
 
 # ----------------- Dependencies -----------------
-try:
-    from tqdm import tqdm
-    import requests
-    import geoip2.database
-except:
-    subprocess.run("pip3 install tqdm requests geoip2", shell=True)
-    from tqdm import tqdm
-    import requests
-    import geoip2.database
+from tqdm import tqdm
+import requests
+import geoip2.database
 
 GEOLITE_COUNTRY_PATH = "GeoLite2-Country.mmdb"
 GEOLITE_ASN_PATH = "GeoLite2-ASN.mmdb"
