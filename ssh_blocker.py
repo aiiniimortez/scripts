@@ -8,7 +8,7 @@ try:
     import requests
     import geoip2.database
 except:
-    subprocess.run("pip install tqdm requests geoip2", shell=True)
+    subprocess.run("pip3 install tqdm requests geoip2", shell=True)
     from tqdm import tqdm
     import requests
     import geoip2.database
