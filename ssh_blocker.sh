@@ -56,12 +56,17 @@ if [[ "$choice" == "3" ]]; then
     exit 1
   fi
 
-  CONF_DIR="/etc/ssh/sshd_config.d"
-  CUSTOM_CONF="$CONF_DIR/99-custom-port.conf"
-  sudo mkdir -p "$CONF_DIR"
 
   echo "[+] Writing new SSH port override..."
-  echo "Port $NEWPORT" | sudo tee "$CUSTOM_CONF" >/dev/null
+SSHD_MAIN="/etc/ssh/sshd_config"
+
+sudo cp "$SSHD_MAIN" "${SSHD_MAIN}.bak.$(date +%F_%T)"
+
+if grep -q "^#\?Port" "$SSHD_MAIN"; then
+    sudo sed -i "s/^#\?Port.*/Port $NEWPORT/" "$SSHD_MAIN"
+else
+    echo "Port $NEWPORT" | sudo tee -a "$SSHD_MAIN"
+fi
 
   echo "[+] Opening firewall for new port..."
   sudo iptables -I INPUT -p tcp --dport "$NEWPORT" -j ACCEPT
