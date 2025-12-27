@@ -36,8 +36,10 @@ read -rp "Enter choice [1/2/3]: " choice
 # -------------------------
 if [[ "$choice" == "3" ]]; then
   echo
-  CUR_PORT=$(ss -tnlp | grep sshd | awk '{print $4}' | sed 's/.*://')
-  echo "Current SSH Port: $CUR_PORT"
+
+  CUR_PORT=$(ss -tnlp | grep sshd | awk '{print $4}' | sed 's/.*://' | sort -u)
+  echo "Current SSH Port(s): $CUR_PORT"
+
   read -rp "Enter new SSH port (1024-65535): " NEWPORT
 
   if ! [[ "$NEWPORT" =~ ^[0-9]+$ ]] || (( NEWPORT < 1024 || NEWPORT > 65535 )); then
@@ -45,18 +47,53 @@ if [[ "$choice" == "3" ]]; then
     exit 1
   fi
 
-  SSHD_CONF="/etc/ssh/sshd_config"
+  CONF_DIR="/etc/ssh/sshd_config.d"
+  CUSTOM_CONF="$CONF_DIR/99-custom-port.conf"
+  sudo mkdir -p "$CONF_DIR"
 
-  sudo cp $SSHD_CONF ${SSHD_CONF}.bak.$(date +%F_%T)
+  echo "[+] Writing new SSH port override..."
+  echo "Port $NEWPORT" | sudo tee "$CUSTOM_CONF" >/dev/null
 
-  if grep -q "^#\?Port" $SSHD_CONF; then
-    sudo sed -i "s/^#\?Port.*/Port $NEWPORT/" $SSHD_CONF
-  else
-    echo "Port $NEWPORT" | sudo tee -a $SSHD_CONF
+  echo "[+] Opening firewall for new port..."
+  sudo iptables -I INPUT -p tcp --dport "$NEWPORT" -j ACCEPT
+
+  echo "[+] Testing sshd configuration..."
+  if ! sudo sshd -t; then
+      echo "[!] sshd config test FAILED. Rolling back..."
+      sudo rm -f "$CUSTOM_CONF"
+      sudo systemctl restart ssh
+      sudo iptables -D INPUT -p tcp --dport "$NEWPORT" -j ACCEPT
+      exit 1
   fi
 
+  echo "[+] Restarting SSH..."
   sudo systemctl restart ssh
-  echo "SSH port changed to $NEWPORT"
+  sleep 2
+
+  if ! ss -tnlp | grep sshd | grep -q ":$NEWPORT"; then
+      echo "[!] New port did NOT come up. Rolling back..."
+      sudo rm -f "$CUSTOM_CONF"
+      sudo systemctl restart ssh
+      sudo iptables -D INPUT -p tcp --dport "$NEWPORT" -j ACCEPT
+      exit 1
+  fi
+
+  # ---------- Ask before closing old ports ----------
+  echo
+  read -rp "Do you want to CLOSE old SSH port(s): $CUR_PORT ? (y/N): " close_ans
+  if [[ "$close_ans" == "y" ]]; then
+      for p in $CUR_PORT; do
+          sudo iptables -I INPUT -p tcp --dport "$p" -j DROP
+      done
+      echo "Old SSH port(s) closed."
+  else
+      echo "Old SSH port(s) left open."
+  fi
+
+  sudo netfilter-persistent save
+
+  echo
+  echo "✅ SSH port successfully changed to $NEWPORT"
   exit 0
 fi
 
