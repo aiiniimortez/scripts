@@ -16,8 +16,8 @@ rm -f /etc/resolv.conf
 
 echo "[4/6] Write real /etc/resolv.conf ..."
 cat >/etc/resolv.conf <<EOF
-nameserver 9.9.9.9
 nameserver 8.8.8.8
+nameserver 9.9.9.9
 nameserver 80.191.40.136
 nameserver 80.191.40.146
 nameserver 185.206.92.250
