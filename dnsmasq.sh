@@ -8,9 +8,9 @@ apt-get install dnsmasq -y >/dev/null
 echo "[2/8] Clean old dnsmasq configs ..."
 rm -f /etc/dnsmasq.d/*.save /etc/dnsmasq.d/*.bak 2>/dev/null || true
 
-echo "[3/8] Configure dnsmasq on port 5353 ..."
+echo "[3/8] Configure dnsmasq on port 53 ..."
 cat >/etc/dnsmasq.d/custom.conf <<EOF
-port=5353
+port=53
 listen-address=127.0.0.1
 bind-interfaces
 
@@ -32,15 +32,15 @@ echo "[4/8] Restart dnsmasq ..."
 systemctl enable dnsmasq
 systemctl restart dnsmasq
 
-echo "[5/8] Verify dnsmasq is listening on 5353 ..."
-ss -lntup | grep 5353 || { echo "dnsmasq not listening!"; exit 1; }
+echo "[5/8] Verify dnsmasq is listening on 53 ..."
+ss -lntup | grep 53 || { echo "dnsmasq not listening!"; exit 1; }
 
 echo "[6/8] Unlock resolv.conf if locked ..."
 chattr -i /etc/resolv.conf 2>/dev/null || true
 
 echo "[7/8] Point resolv.conf to dnsmasq ..."
 cat >/etc/resolv.conf <<EOF
-nameserver 127.0.0.1#5353
+nameserver 127.0.0.1
 options timeout:1 attempts:2 rotate
 EOF
 
