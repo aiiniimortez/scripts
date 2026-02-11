@@ -23,7 +23,7 @@ nameserver 80.191.40.146
 nameserver 185.206.92.250
 nameserver 46.245.69.110
 nameserver 5.145.115.33
-options timeout:1 attempts:2 rotate
+options timeout:1 attempts:1 rotate
 EOF
 
 echo "[5/6] Lock resolv.conf (immutable) ..."
