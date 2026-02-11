@@ -18,8 +18,11 @@ echo "[4/6] Write real /etc/resolv.conf ..."
 cat >/etc/resolv.conf <<EOF
 nameserver 9.9.9.9
 nameserver 8.8.8.8
-nameserver $DC_DNS
-nameserver 1.1.1.1
+nameserver 80.191.40.136
+nameserver 80.191.40.146
+nameserver 185.206.92.250
+nameserver 46.245.69.110
+nameserver 5.145.115.33
 options timeout:1 attempts:2 rotate
 EOF
 
@@ -31,4 +34,4 @@ sed -i 's/^#*DNSSEC=.*/DNSSEC=no/' /etc/systemd/resolved.conf
 systemctl restart systemd-resolved || true
 
 echo "Done ✅"
-echo "Test with: dig google.com"
+dig time.ir
