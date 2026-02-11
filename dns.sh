@@ -11,6 +11,7 @@ DC_DNS=$(ip route | awk '/default/ {print $3; exit}')
 echo "Datacenter DNS: $DC_DNS"
 
 echo "[3/6] Remove systemd stub resolv.conf ..."
+chattr -i /etc/resolv.conf
 rm -f /etc/resolv.conf
 
 echo "[4/6] Write real /etc/resolv.conf ..."
