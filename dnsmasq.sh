@@ -20,6 +20,7 @@ server=8.8.8.8
 server=80.191.40.136
 server=80.191.40.146
 server=185.206.92.250
+server=46.245.69.110
 server=5.145.115.33
 
 cache-size=10000
