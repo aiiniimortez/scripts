@@ -2,8 +2,8 @@
 set -e
 
 echo "[1/7] Install dnsmasq ..."
-apt update -y >/dev/null
-apt install dnsmasq -y >/dev/null
+apt-get update -y >/dev/null
+apt-get install dnsmasq -y >/dev/null
 
 echo "[2/7] Stop systemd-resolved DNS stub listener (optional) ..."
 sed -i 's/^#*DNSStubListener=.*/DNSStubListener=no/' /etc/systemd/resolved.conf || true
