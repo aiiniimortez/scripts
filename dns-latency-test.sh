@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-DNS_FIXED_FIRST="127.0.0.53"
-DNS_EXTERNAL=("8.8.8.8" "1.1.1.1")
-DNS_SERVERS=("$DNS_FIXED_FIRST" "${DNS_EXTERNAL[@]}")
+DNS_SERVERS=("8.8.8.8" "1.1.1.1" "127.0.0.53")
 
 DOMAINS=(
   "www.gstatic.com"
@@ -29,6 +27,7 @@ need_cmd dig
 need_cmd ping
 need_cmd awk
 need_cmd sort
+need_cmd tee
 
 add_float() {
   awk -v a="${1:-0}" -v b="${2:-0}" 'BEGIN { printf "%.3f", a + b }'
@@ -37,7 +36,6 @@ add_float() {
 avg_float() {
   local sum="${1:-0}"
   local count="${2:-0}"
-
   awk -v s="$sum" -v c="$count" 'BEGIN {
     if (c > 0) printf "%.1f", s / c;
     else printf "n/a";
@@ -174,22 +172,24 @@ for dns in "${DNS_SERVERS[@]}"; do
   ROWAVG["$dns"]="$(avg_float "$row_q_sum" "$row_q_count")|$(avg_float "$row_p_sum" "$row_p_count")|$(avg_float "$row_t_sum" "$row_t_count")"
 done
 
-sorted_external=()
-while IFS=$'\t' read -r key dns; do
-  [[ -n "${dns:-}" ]] && sorted_external+=("$dns")
-done < <(
-  for dns in "${DNS_EXTERNAL[@]}"; do
+sorted_dns=()
+mapfile -t sorted_lines < <(
+  for idx in "${!DNS_SERVERS[@]}"; do
+    dns="${DNS_SERVERS[$idx]}"
     IFS='|' read -r _ _ total_avg <<<"${ROWAVG["$dns"]}"
     if [[ "$total_avg" == "n/a" ]]; then
       key="999999"
     else
       key="$total_avg"
     fi
-    printf "%s\t%s\n" "$key" "$dns"
-  done | sort -n -k1,1
+    printf "%s\t%03d\t%s\n" "$key" "$idx" "$dns"
+  done | sort -n -k1,1 -k2,2
 )
 
-ORDERED_DNS=("$DNS_FIXED_FIRST" "${sorted_external[@]}")
+for line in "${sorted_lines[@]}"; do
+  IFS=$'\t' read -r _ _ dns <<<"$line"
+  sorted_dns+=("$dns")
+done
 
 dns_w=15
 cell_w=28
@@ -199,7 +199,7 @@ print_border "$dns_w" "$cell_w" "$cols"
 print_row "$dns_w" "$cell_w" "DNS" "${DOMAINS[@]}" "Average"
 print_border "$dns_w" "$cell_w" "$cols"
 
-for dns in "${ORDERED_DNS[@]}"; do
+for dns in "${sorted_dns[@]}"; do
   row=("$dns")
   for domain in "${DOMAINS[@]}"; do
     row+=("${CELL["$dns|$domain"]}")
@@ -212,7 +212,7 @@ print_border "$dns_w" "$cell_w" "$cols"
 
 echo
 echo "Final DNS order:"
-for dns in "${ORDERED_DNS[@]}"; do
+for dns in "${sorted_dns[@]}"; do
   echo "  $dns"
 done
 
@@ -231,7 +231,7 @@ backup="${RESOLV_CONF}.bak.$(date +%Y%m%d-%H%M%S)"
 "${SUDO[@]}" cp -L "$RESOLV_CONF" "$backup"
 
 {
-  for dns in "${ORDERED_DNS[@]}"; do
+  for dns in "${sorted_dns[@]}"; do
     printf "nameserver %s\n" "$dns"
   done
 } | "${SUDO[@]}" tee "$RESOLV_CONF" >/dev/null
